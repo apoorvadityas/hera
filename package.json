@@ -17,8 +17,10 @@
     "heroku": "^7.46.0",
     "html": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
+    "method-override": "^3.0.0",
     "mongoose": "^5.12.13",
-    "nodemailer": "^6.6.1"
+    "nodemailer": "^6.6.1",
+    "querystring": "^0.2.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.2"

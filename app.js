@@ -8,9 +8,17 @@ const nodemailer = require("nodemailer");
 const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
 const auth = require("./auth");
-
+const { json } = require("body-parser");
+const querystring = require('querystring');
 // execute database connection
 dbConnect();
+app.use ((req, res, next) => {
+  res.locals.url = req.originalUrl.params;
+  res.locals.host = req.get('host');
+  res.locals.protocol = req.protocol;
+  next();
+});
+
 app.use(express.static('public'));
 app.engine('html', require('ejs').renderFile);
 // Curb Cores Error by adding a header here
@@ -30,6 +38,79 @@ app.use((req, res, next) => {
 // body parser configuration
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+
+app.get("/apply/:jobName", function (req, res) {
+  res.render("loginapply.ejs");
+  // Qs = querystring.stringify(req.params);
+  // console.log(Qs);
+  // temp=req.params;
+  
+});
+
+
+
+app.post("/apply/:job", (request, response) => {
+ 
+  const {job}=request.params;
+  User.findOne({ email: request.body.email })
+
+    // if email exists
+    .then((user) => {
+      // compare the password entered and the hashed password found
+      bcrypt
+        .compare(request.body.password, user.password)
+
+        // if the passwords match
+        .then((passwordCheck) => {
+
+          // check if password matches
+          if (!passwordCheck) {
+            return response.status(400).send({
+              message: "Passwords do not match",
+              error,
+            });
+          }
+
+          //   create JWT token
+          const token = jwt.sign(
+            {
+              userId: user._id,
+              userEmail: user.email,
+            },
+            "RANDOM-TOKEN",
+            { expiresIn: "24h" }
+          );
+          if (response.statusCode == 200) {
+            User.findOne({email:user.email}).then(user.jobsAppliedFor.push(job)).then(user.save())
+
+            response.render("applied.html");
+          }
+          response.status(200).send({
+            message: "Login Successful",
+            email: user.email,
+            //token,
+            name: user.name,
+            JobsApplied: user.jobsAppliedFor,
+            DOB: user.dob,
+          });
+        })
+        // catch error if password do not match
+        .catch((error) => {
+          response.status(400).send({
+            message: "Passwords does not match",
+            error,
+          });
+        });
+    })
+    // catch error if email does not exist
+    .catch((e) => {
+      response.status(404).send({
+        message: "Email not found",
+        e,
+      });
+    });
+});
 
 
 app.get("/home.html", function (req, res) {
@@ -57,11 +138,11 @@ app.get("/register.html", function (req, res) {
   res.render("register.html");
 });
 
-app.get('/verify/:password', async(req,res) => {
+app.get('/verify/:password', async (req, res) => {
   const { password } = req.params
-  const user= await User.findOne({password:password})
-  if(user) {
-    user.isValid= true
+  const user = await User.findOne({ password: password })
+  if (user) {
+    user.isValid = true
     await user.save()
     res.redirect('/home.html')
   } else {
@@ -71,7 +152,7 @@ app.get('/verify/:password', async(req,res) => {
 
 
 // register endpoint
-app.post("/register",async (request, response) => {
+app.post("/register", async (request, response) => {
   // hash the password
   bcrypt
     .hash(request.body.password, 10)
@@ -88,26 +169,26 @@ app.post("/register",async (request, response) => {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'sqrt4916253649@gmail.com',
-            pass: 'squareroot'
+          user: 'sqrt4916253649@gmail.com',
+          pass: 'squareroot'
         }
-    });
-    
-    // email options
-    let mailOptions = {
+      });
+
+      // email options
+      let mailOptions = {
         from: 'sqrt4916253649@gmail.com',
         to: user.email,
         subject: 'subject',
-        html: `Press <a href="http://localhost:3000/verify/${user.password}"> here </a>`  
-    };
-    
-    // send email
-    transporter.sendMail(mailOptions, (error, response) => {
+        html: `Press <a href="http://localhost:3000/verify/${user.password}"> here </a>`
+      };
+
+      // send email
+      transporter.sendMail(mailOptions, (error, response) => {
         if (error) {
-            console.log(error);
+          console.log(error);
         }
         console.log(response)
-    });
+      });
       // save the new user
       user
         .save()
@@ -115,7 +196,7 @@ app.post("/register",async (request, response) => {
         .then((result) => {
           response.status(201).send({
             message: "User Created Successfully",
-           // result,
+            // result,
           });
         })
         // catch erroe if the new user wasn't added successfully to the database
@@ -150,7 +231,7 @@ app.post("/login", (request, response) => {
         .then((passwordCheck) => {
 
           // check if password matches
-          if(!passwordCheck) {
+          if (!passwordCheck) {
             return response.status(400).send({
               message: "Passwords does not match",
               error,
@@ -168,10 +249,10 @@ app.post("/login", (request, response) => {
           );
 
           // response.status(200).render("temp.ejs");
-            //return success response
-           // User.find({}, function(err, users) {
-            response.status(200).render("myspace.ejs",{users:user});
-           //});
+          //return success response
+          // User.find({}, function(err, users) {
+          response.status(200).render("myspace.ejs", { users: user });
+          //});
           response.status(200).send({
             message: "Login Successful",
             email: user.email,
