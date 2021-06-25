@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nodepod
+  name: nodepod
+spec:
+    configMap:
+      name: mycm
+  containers:
+  - image: samiksha18/webapp:latest
+    name: nodepod
+    ports: 
+      - containerPort: 8080
+    resources: {}
+    env:
+     DB_URL=mongodb+srv://Amartya:p2GQJ4dSGw4AI3Lf@cluster0.ppvul.mongodb.net
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
