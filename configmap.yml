@@ -1,0 +1,7 @@
+kind: ConfigMap 
+apiVersion: v1 
+metadata:
+  name: mycm
+data:
+  DB_URL=mongodb+srv://Amartya:p2GQJ4dSGw4AI3Lf@cluster0.ppvul.mongodb.net
+  
