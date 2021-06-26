@@ -6,8 +6,6 @@ metadata:
     run: nodepod
   name: nodepod
 spec:
-    configMap:
-      name: mycm
   containers:
   - image: samiksha18/webapp
     name: nodepod
